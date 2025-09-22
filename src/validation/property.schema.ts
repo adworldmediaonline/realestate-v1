@@ -23,7 +23,11 @@ export const propertySchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
   ownerId: z.string().optional(),
   slug: z.string().min(1, 'Slug is required').optional(),
-  mainImage: imageDataSchema,
+  mainImage: z
+    .union([z.undefined(), imageDataSchema])
+    .refine(val => val !== undefined, {
+      message: 'Main image is required',
+    }),
   additionalImages: z.array(imageDataSchema).optional(),
 });
 
