@@ -25,6 +25,11 @@ model User {
   initials      String?
   sessions      Session[]
   accounts      Account[]
+  favorites     UserFavorite[] @relation("UserFavorites")
+  inquiries     Inquiry[] @relation("UserInquiries")
+  bookings      Booking[] @relation("UserBookings")
+  reviews       Review[] @relation("UserReviews")
+  properties    Property[] @relation("OwnerToProperties")
 
   @@unique([email])
   @@map("user")
@@ -73,4 +78,109 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  propertyType String @default("house")
+  price       Float
+  location    String
+  address     String?
+  bedrooms    Int      @default(0)
+  bathrooms   Int      @default(0)
+  area        Float?
+  features    String[] // JSON array of features
+  status      PropertyStatus @default(DRAFT)
+  ownerId     String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  owner       User     @relation("OwnerToProperties", fields: [ownerId], references: [id])
+  properties  UserFavorite[] @relation("PropertyFavorites")
+  inquiries   Inquiry[] @relation("PropertyInquiries")
+  bookings    Booking[] @relation("PropertyBookings")
+  reviews     Review[] @relation("PropertyReviews")
+
+  @@map("property")
+}
+
+enum PropertyStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+}
+
+model UserFavorite {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation("PropertyFavorites", fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@map("user_favorite")
+}
+
+model Inquiry {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  message    String
+  status     InquiryStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  user       User     @relation("UserInquiries", fields: [userId], references: [id])
+  property   Property @relation("PropertyInquiries", fields: [propertyId], references: [id])
+
+  @@map("inquiry")
+}
+
+enum InquiryStatus {
+  PENDING
+  RESPONDED
+  CLOSED
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  startDate  DateTime
+  endDate    DateTime
+  status     BookingStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  user       User     @relation("UserBookings", fields: [userId], references: [id])
+  property   Property @relation("PropertyBookings", fields: [propertyId], references: [id])
+
+  @@map("booking")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  rating     Int      @default(5) // 1-5 stars
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  user       User     @relation("UserReviews", fields: [userId], references: [id])
+  property   Property @relation("PropertyReviews", fields: [propertyId], references: [id])
+
+  @@map("review")
 }
