@@ -10,6 +10,12 @@ import slugify from 'slugify';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
+interface ImageData {
+  publicId: string;
+  url: string;
+  altText?: string;
+}
+
 export async function createProperty(data: PropertyInput) {
   const session = await auth.api.getSession({ headers: await headers() });
   const validatedData = propertySchema.parse(data);
@@ -20,6 +26,12 @@ export async function createProperty(data: PropertyInput) {
       ...validatedData,
       slug,
       ownerId: validatedData.ownerId || session?.user?.id,
+      thumbnail: validatedData.mainImage
+        ? JSON.stringify(validatedData.mainImage)
+        : null,
+      images: validatedData.additionalImages
+        ? JSON.stringify(validatedData.additionalImages)
+        : null,
     },
   });
 
@@ -28,15 +40,43 @@ export async function createProperty(data: PropertyInput) {
 }
 
 export async function getProperties() {
-  return await prisma.property.findMany({
+  const properties = await prisma.property.findMany({
     orderBy: { createdAt: 'desc' },
   });
+
+  return properties.map(property => ({
+    ...property,
+    thumbnail: property.thumbnail
+      ? (JSON.parse(
+          property.thumbnail as string
+        ) as unknown as ImageData | null)
+      : null,
+    images: property.images
+      ? (JSON.parse(property.images as string) as unknown as ImageData[])
+      : [],
+  }));
 }
 
 export async function getPropertyById(id: string) {
-  return await prisma.property.findUnique({
+  const property = await prisma.property.findUnique({
     where: { id },
   });
+
+  if (property) {
+    return {
+      ...property,
+      thumbnail: property.thumbnail
+        ? (JSON.parse(
+            property.thumbnail as string
+          ) as unknown as ImageData | null)
+        : null,
+      images: property.images
+        ? (JSON.parse(property.images as string) as unknown as ImageData[])
+        : [],
+    };
+  }
+
+  return property;
 }
 
 export async function updateProperty(id: string, data: PropertyInput) {
@@ -50,6 +90,12 @@ export async function updateProperty(id: string, data: PropertyInput) {
       ...validatedData,
       slug,
       ownerId: validatedData.ownerId || session?.user?.id,
+      thumbnail: validatedData.mainImage
+        ? JSON.stringify(validatedData.mainImage)
+        : null,
+      images: validatedData.additionalImages
+        ? JSON.stringify(validatedData.additionalImages)
+        : null,
     },
   });
 

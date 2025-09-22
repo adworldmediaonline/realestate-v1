@@ -49,8 +49,28 @@ import {
 import { Property } from '@prisma/client';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const columns: ColumnDef<Property>[] = [
+  {
+    accessorKey: 'thumbnail',
+    header: 'Thumbnail',
+    cell: ({ row }) => {
+      const thumbnail = row.original.thumbnail;
+      if (thumbnail) {
+        return (
+          <Image
+            src={thumbnail.url}
+            alt={thumbnail.altText || 'Property thumbnail'}
+            width={64}
+            height={64}
+            className="object-cover rounded"
+          />
+        );
+      }
+      return <div className="w-16 h-16 bg-gray-200 rounded"></div>;
+    },
+  },
   {
     accessorKey: 'name',
     header: 'Name',

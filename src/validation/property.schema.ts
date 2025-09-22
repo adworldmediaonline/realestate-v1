@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+const imageDataSchema = z.object({
+  publicId: z.string().min(1, 'Public ID is required'),
+  url: z.url('Invalid image URL'),
+  altText: z.string().optional(),
+});
+
 export const propertySchema = z.object({
   name: z
     .string()
@@ -17,6 +23,8 @@ export const propertySchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
   ownerId: z.string().optional(),
   slug: z.string().min(1, 'Slug is required').optional(),
+  mainImage: imageDataSchema.optional(),
+  additionalImages: z.array(imageDataSchema).optional(),
 });
 
 export type PropertyInput = z.infer<typeof propertySchema>;

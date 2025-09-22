@@ -28,6 +28,13 @@ import {
 } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { authClient } from '@/lib/auth-client';
+import { ImageUpload } from './image-upload';
+
+interface ImageData {
+  publicId: string;
+  url: string;
+  altText?: string;
+}
 
 type PropertyFormProps = {
   property?: Property;
@@ -55,6 +62,9 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
       features: property?.features ?? [],
       status: property?.status || 'DRAFT',
       ownerId: session?.user?.id || '',
+      mainImage:
+        (property?.thumbnail as unknown as ImageData | null) || undefined,
+      additionalImages: (property?.images as unknown as ImageData[]) || [],
     },
   });
 
@@ -278,6 +288,54 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
                   <SelectItem value="UNPUBLISHED">Unpublished</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {/* Main Image Upload */}
+        <FormField
+          control={form.control}
+          name="mainImage"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Main Image</FormLabel>
+              <FormControl>
+                <ImageUpload
+                  variant="single"
+                  value={field.value}
+                  onChange={field.onChange}
+                  maxFileSize={5 * 1024 * 1024} // 5MB
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Additional Images Upload */}
+        <FormField
+          control={form.control}
+          name="additionalImages"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Additional Images</FormLabel>
+              <FormControl>
+                <ImageUpload
+                  variant="multiple"
+                  limit={10}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  maxFileSize={5 * 1024 * 1024} // 5MB
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                />
+              </FormControl>
+
               <FormMessage />
             </FormItem>
           )}
