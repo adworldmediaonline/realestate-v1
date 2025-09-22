@@ -21,17 +21,15 @@ export async function createProperty(data: PropertyInput) {
   const validatedData = propertySchema.parse(data);
   const slug = slugify(validatedData.name, { lower: true, strict: true });
 
+  const { mainImage, additionalImages, ...restData } = validatedData;
+
   const property = await prisma.property.create({
     data: {
-      ...validatedData,
+      ...restData,
       slug,
       ownerId: validatedData.ownerId || session?.user?.id,
-      thumbnail: validatedData.mainImage
-        ? JSON.stringify(validatedData.mainImage)
-        : null,
-      images: validatedData.additionalImages
-        ? JSON.stringify(validatedData.additionalImages)
-        : null,
+      thumbnail: mainImage ? JSON.stringify(mainImage) : null,
+      images: additionalImages ? JSON.stringify(additionalImages) : null,
     },
   });
 
@@ -84,18 +82,16 @@ export async function updateProperty(id: string, data: PropertyInput) {
   const validatedData = propertySchema.parse(data);
   const slug = slugify(validatedData.name, { lower: true, strict: true });
 
+  const { mainImage, additionalImages, ...restData } = validatedData;
+
   const property = await prisma.property.update({
     where: { id },
     data: {
-      ...validatedData,
+      ...restData,
       slug,
       ownerId: validatedData.ownerId || session?.user?.id,
-      thumbnail: validatedData.mainImage
-        ? JSON.stringify(validatedData.mainImage)
-        : null,
-      images: validatedData.additionalImages
-        ? JSON.stringify(validatedData.additionalImages)
-        : null,
+      thumbnail: mainImage ? JSON.stringify(mainImage) : null,
+      images: additionalImages ? JSON.stringify(additionalImages) : null,
     },
   });
 
