@@ -8,6 +8,7 @@ import {
   publishProperty,
   unpublishProperty,
   markAsDraft,
+  updatePropertyImages,
 } from '@/actions/property-actions';
 import { PropertyInput } from '@/validation/property.schema';
 
@@ -89,6 +90,24 @@ export function useMarkAsDraft() {
     mutationFn: markAsDraft,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
+    },
+  });
+}
+
+export function useUpdatePropertyImages() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: { thumbnail?: any; images?: any };
+    }) => updatePropertyImages(id, updates),
+    onSuccess: data => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property', data.id] });
     },
   });
 }

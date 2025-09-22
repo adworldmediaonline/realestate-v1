@@ -46,6 +46,7 @@ interface ImageUploadProps {
   limit?: number;
   className?: string;
   disabled?: boolean;
+  onDelete?: () => void;
 }
 
 interface UploadProgress {
@@ -193,6 +194,7 @@ const ImageUpload = React.forwardRef<HTMLDivElement, ImageUploadProps>(
       limit = 10,
       className,
       disabled = false,
+      onDelete,
     },
     ref
   ) => {
@@ -315,6 +317,7 @@ const ImageUpload = React.forwardRef<HTMLDivElement, ImageUploadProps>(
           onChange(newImages.length > 0 ? newImages : []);
         }
 
+        onDelete?.();
         toast.success('Image deleted successfully');
       } catch (error) {
         console.error('Delete error:', error);

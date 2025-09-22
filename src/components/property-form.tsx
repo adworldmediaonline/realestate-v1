@@ -6,7 +6,11 @@ import {
   propertySchema,
   type PropertyInput,
 } from '@/validation/property.schema';
-import { useCreateProperty, useUpdateProperty } from '@/hooks/use-properties';
+import {
+  useCreateProperty,
+  useUpdateProperty,
+  useUpdatePropertyImages,
+} from '@/hooks/use-properties';
 import { Property } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,12 +43,20 @@ interface ImageData {
 type PropertyFormProps = {
   property?: Property;
   onSuccess: () => void;
+  propertyId?: string;
+  onImageUpdate?: () => void;
 };
 
-export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
+export function PropertyForm({
+  property,
+  onSuccess,
+  propertyId,
+  onImageUpdate,
+}: PropertyFormProps) {
   const isEditing = !!property;
   const createMutation = useCreateProperty();
   const updateMutation = useUpdateProperty();
+  const updateImagesMutation = useUpdatePropertyImages();
   const { data: session } = authClient.useSession();
 
   const form = useForm<PropertyInput>({
@@ -301,6 +313,7 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
               <FormLabel>Main Image</FormLabel>
               <FormControl>
                 <ImageUpload
+                  key={JSON.stringify(field.value)}
                   variant="single"
                   value={field.value}
                   onChange={field.onChange}
@@ -308,6 +321,15 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
                   disabled={
                     createMutation.isPending || updateMutation.isPending
                   }
+                  onDelete={async () => {
+                    if (propertyId) {
+                      await updateImagesMutation.mutateAsync({
+                        id: propertyId,
+                        updates: { thumbnail: null },
+                      });
+                      onImageUpdate?.();
+                    }
+                  }}
                 />
               </FormControl>
 
@@ -325,6 +347,7 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
               <FormLabel>Additional Images</FormLabel>
               <FormControl>
                 <ImageUpload
+                  key={JSON.stringify(field.value || [])}
                   variant="multiple"
                   limit={10}
                   value={field.value || []}
@@ -333,6 +356,15 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
                   disabled={
                     createMutation.isPending || updateMutation.isPending
                   }
+                  onDelete={async () => {
+                    if (propertyId) {
+                      await updateImagesMutation.mutateAsync({
+                        id: propertyId,
+                        updates: { images: field.value || [] },
+                      });
+                      onImageUpdate?.();
+                    }
+                  }}
                 />
               </FormControl>
 

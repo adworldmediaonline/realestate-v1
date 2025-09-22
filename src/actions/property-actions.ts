@@ -107,6 +107,22 @@ export async function deleteProperty(id: string) {
   revalidatePath('/dashboard');
 }
 
+export async function updatePropertyImages(
+  id: string,
+  updates: { thumbnail?: ImageData | null; images?: ImageData[] }
+) {
+  const property = await prisma.property.update({
+    where: { id },
+    data: {
+      thumbnail: updates.thumbnail ? JSON.stringify(updates.thumbnail) : null,
+      images: updates.images ? JSON.stringify(updates.images) : null,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  return property;
+}
+
 export async function publishProperty(id: string) {
   const property = await prisma.property.update({
     where: { id },

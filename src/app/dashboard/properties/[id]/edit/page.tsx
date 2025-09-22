@@ -8,7 +8,7 @@ export default function EditPropertyPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { data: property, isLoading, error } = usePropertyById(id);
+  const { data: property, isLoading, error, refetch } = usePropertyById(id);
 
   const handleSuccess = () => {
     router.push('/dashboard/properties');
@@ -28,7 +28,12 @@ export default function EditPropertyPage() {
         <h1 className="text-2xl font-bold">Edit Property</h1>
       </div>
       <div className="px-4 lg:px-6">
-        <PropertyForm property={property} onSuccess={handleSuccess} />
+        <PropertyForm
+          property={property}
+          onSuccess={handleSuccess}
+          propertyId={id}
+          onImageUpdate={refetch}
+        />
       </div>
     </div>
   );
