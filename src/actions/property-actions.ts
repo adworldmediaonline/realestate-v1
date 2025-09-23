@@ -9,6 +9,7 @@ import { headers } from 'next/headers';
 import slugify from 'slugify';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 interface ImageData {
   publicId: string;
@@ -28,8 +29,10 @@ export async function createProperty(data: PropertyInput) {
       ...restData,
       slug,
       ownerId: validatedData.ownerId || session?.user?.id,
-      thumbnail: mainImage ? JSON.stringify(mainImage) : null,
-      images: additionalImages ? JSON.stringify(additionalImages) : null,
+      thumbnail: mainImage ? JSON.stringify(mainImage) : Prisma.JsonNull,
+      images: additionalImages
+        ? JSON.stringify(additionalImages)
+        : Prisma.JsonNull,
     },
   });
 
@@ -48,7 +51,7 @@ export async function getProperties() {
       ? (JSON.parse(
           property.thumbnail as string
         ) as unknown as ImageData | null)
-      : null,
+      : Prisma.JsonNull,
     images: property.images
       ? (JSON.parse(property.images as string) as unknown as ImageData[])
       : [],
@@ -67,7 +70,7 @@ export async function getPropertyById(id: string) {
         ? (JSON.parse(
             property.thumbnail as string
           ) as unknown as ImageData | null)
-        : null,
+        : Prisma.JsonNull,
       images: property.images
         ? (JSON.parse(property.images as string) as unknown as ImageData[])
         : [],
@@ -90,8 +93,10 @@ export async function updateProperty(id: string, data: PropertyInput) {
       ...restData,
       slug,
       ownerId: validatedData.ownerId || session?.user?.id,
-      thumbnail: mainImage ? JSON.stringify(mainImage) : null,
-      images: additionalImages ? JSON.stringify(additionalImages) : null,
+      thumbnail: mainImage ? JSON.stringify(mainImage) : Prisma.JsonNull,
+      images: additionalImages
+        ? JSON.stringify(additionalImages)
+        : Prisma.JsonNull,
     },
   });
 
@@ -114,8 +119,10 @@ export async function updatePropertyImages(
   const property = await prisma.property.update({
     where: { id },
     data: {
-      thumbnail: updates.thumbnail ? JSON.stringify(updates.thumbnail) : null,
-      images: updates.images ? JSON.stringify(updates.images) : null,
+      thumbnail: updates.thumbnail
+        ? JSON.stringify(updates.thumbnail)
+        : Prisma.JsonNull,
+      images: updates.images ? JSON.stringify(updates.images) : Prisma.JsonNull,
     },
   });
 

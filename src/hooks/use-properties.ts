@@ -10,12 +10,16 @@ import {
   markAsDraft,
   updatePropertyImages,
 } from '@/actions/property-actions';
-import { PropertyInput } from '@/validation/property.schema';
+import {
+  PropertyInput,
+  PropertyWithImages,
+} from '@/validation/property.schema';
 
 export function useProperties() {
   return useQuery({
     queryKey: ['properties'],
     queryFn: getProperties,
+    select: data => data as PropertyWithImages[],
   });
 }
 
@@ -24,6 +28,7 @@ export function usePropertyById(id: string) {
     queryKey: ['property', id],
     queryFn: () => getPropertyById(id),
     enabled: !!id,
+    select: data => data as PropertyWithImages | null,
   });
 }
 

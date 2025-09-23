@@ -14,7 +14,7 @@ import {
 import { Property } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+
 import {
   Select,
   SelectContent,
@@ -33,15 +33,11 @@ import {
 import { toast } from 'sonner';
 import { authClient } from '@/lib/auth-client';
 import { ImageUpload } from './image-upload';
-
-interface ImageData {
-  publicId: string;
-  url: string;
-  altText?: string;
-}
+import { RichTextEditor } from './rich-text-editor';
+import { ImageData, PropertyWithImages } from '@/validation/property.schema';
 
 type PropertyFormProps = {
-  property?: Property;
+  property?: PropertyWithImages;
   onSuccess: () => void;
   propertyId?: string;
   onImageUpdate?: () => void;
@@ -121,7 +117,11 @@ export function PropertyForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Property description" {...field} />
+                <RichTextEditor
+                  {...field}
+                  placeholder="Write your property description here..."
+                  size="lg"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

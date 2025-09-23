@@ -1,4 +1,16 @@
 import { z } from 'zod';
+import { Property } from '@prisma/client';
+
+export interface ImageData {
+  publicId: string;
+  url: string;
+  altText?: string;
+}
+
+export type PropertyWithImages = Omit<Property, 'thumbnail' | 'images'> & {
+  thumbnail: ImageData | null;
+  images: ImageData[];
+};
 
 const imageDataSchema = z.object({
   publicId: z.string().min(1, 'Public ID is required'),

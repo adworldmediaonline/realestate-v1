@@ -13,13 +13,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { IconPlus } from '@tabler/icons-react';
-import { Property } from '@prisma/client';
+import { PropertyWithImages } from '@/validation/property.schema';
 
 export function PropertyManagement() {
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [editingProperty, setEditingProperty] =
+    useState<PropertyWithImages | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handleEdit = (property: Property) => {
+  const handleEdit = (property: PropertyWithImages) => {
     setEditingProperty(property);
     setIsFormOpen(true);
   };
@@ -53,7 +54,7 @@ export function PropertyManagement() {
           </DialogContent>
         </Dialog>
       </div>
-      <PropertyTable />
+      <PropertyTable onEdit={handleEdit} />
     </div>
   );
 }
