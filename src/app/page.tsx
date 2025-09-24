@@ -1,6 +1,6 @@
 import { HeroSection } from '@/components/hero-section';
 import { Services } from '@/components/services';
-import { FeaturedProperties } from '@/components/featured-properties';
+import { PropertyGrid } from '@/components/property-grid';
 import { Testimonials } from '@/components/testimonials';
 import { Footer } from '@/components/footer';
 
@@ -9,7 +9,7 @@ export default function Home() {
     <div>
       <HeroSection />
       <Services />
-      <FeaturedProperties />
+      <PropertyGrid />
       <Testimonials />
       <Footer />
     </div>
