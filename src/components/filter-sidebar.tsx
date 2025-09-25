@@ -64,7 +64,12 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   const { data: properties } = useProperties();
 
   // Dynamically generate filter options from real data
-  const filterOptions = useMemo(() => {
+  const filterOptions = useMemo((): {
+    locations: string[];
+    propertyTypes: string[];
+    priceRange: [number, number];
+    areaRange: [number, number];
+  } => {
     if (!properties) {
       return {
         locations: [],
@@ -92,7 +97,7 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
     const prices = publishedProperties.map(p => p.price);
     const priceRange: [number, number] =
       prices.length > 0
-        ? [Math.min(...prices), Math.max(...prices)]
+        ? ([Math.min(...prices), Math.max(...prices)] as [number, number])
         : [0, 100000];
 
     // Calculate area range
@@ -100,7 +105,9 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
       .map(p => p.area)
       .filter((area): area is number => area !== null && area !== undefined);
     const areaRange: [number, number] =
-      areas.length > 0 ? [Math.min(...areas), Math.max(...areas)] : [0, 10000];
+      areas.length > 0
+        ? ([Math.min(...areas), Math.max(...areas)] as [number, number])
+        : [0, 10000];
 
     return {
       locations,
@@ -171,7 +178,11 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   };
 
   const handlePriceRangeChange = (value: number[]) => {
-    if (value.length === 2 && value[0] !== undefined && value[1] !== undefined) {
+    if (
+      value.length === 2 &&
+      value[0] !== undefined &&
+      value[1] !== undefined
+    ) {
       updateFilters({ priceRange: value as [number, number] });
     }
   };
@@ -322,7 +333,10 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
               variant="ghost"
               size="sm"
               onClick={() =>
-                setFilters(prev => ({ ...prev, priceRange: filterOptions.priceRange }))
+                setFilters(prev => ({
+                  ...prev,
+                  priceRange: filterOptions.priceRange,
+                }))
               }
               className="h-6 w-6 p-0"
             >
@@ -336,7 +350,14 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
                 onValueChange={handlePriceRangeChange}
                 max={filterOptions.priceRange[1]}
                 min={filterOptions.priceRange[0]}
-                step={Math.max(1000, Math.floor((filterOptions.priceRange[1] - filterOptions.priceRange[0]) / 100))}
+                step={Math.max(
+                  1000,
+                  Math.floor(
+                    (filterOptions.priceRange[1] -
+                      filterOptions.priceRange[0]) /
+                      100
+                  )
+                )}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-estate-gray-500 mt-2">
@@ -348,7 +369,8 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
                 </span>
               </div>
               <div className="text-center text-xs text-estate-gray-400 mt-1">
-                Available: {formatPrice(filterOptions.priceRange[0])} - {formatPrice(filterOptions.priceRange[1])}
+                Available: {formatPrice(filterOptions.priceRange[0])} -{' '}
+                {formatPrice(filterOptions.priceRange[1])}
               </div>
               {filterOptions.priceRange[0] === filterOptions.priceRange[1] && (
                 <div className="text-center text-xs text-estate-warning mt-1">

@@ -20,7 +20,7 @@ import {
   IconMessageCircle,
   IconUser,
   IconSettings,
-  IconLogout,
+  // IconLogout,
   IconHeart,
   IconMenu2,
   IconX,
@@ -29,8 +29,8 @@ import { authClient } from '@/lib/auth-client';
 import { SignOut } from '@/components/auth/signout';
 
 const navigation = [
-  { name: 'Buy', href: '/buy' },
-  { name: 'Rent', href: '/rent' },
+  // { name: 'Buy', href: '/buy' },
+  // { name: 'Rent', href: '/rent' },
   { name: 'Favorites', href: '/favorites' },
   { name: 'Help', href: '/help' },
   { name: 'Services', href: '/services' },
@@ -57,10 +57,10 @@ export function EstateHeader({ onSearchChange }: EstateHeaderProps) {
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-estate-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">E</span>
+                <span className="text-white font-bold text-lg">R</span>
               </div>
               <span className="text-xl font-bold text-estate-gray-900">
-                EstateEase
+                Real Estate
               </span>
             </Link>
           </div>

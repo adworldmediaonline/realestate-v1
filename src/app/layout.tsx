@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'EstateEase - Find Your Dream Property',
+  title: 'Real Estate - Find Your Dream Property',
   description:
-    'Discover and explore premium properties with EstateEase. Find your perfect home, apartment, or villa with our advanced search and filtering system.',
+    'Discover and explore premium properties with Real Estate. Find your perfect home, apartment, or villa with our advanced search and filtering system.',
 };
 
 export default function RootLayout({
