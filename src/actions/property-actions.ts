@@ -42,7 +42,7 @@ export async function createProperty(data: PropertyInput) {
 
 export async function getProperties() {
   const properties = await prisma.property.findMany({
-    where: { status: 'PUBLISHED' as const },
+    // where: { status: 'PUBLISHED' as const },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -59,11 +59,14 @@ export async function getProperties() {
   }));
 }
 
-export async function getPropertiesPaginated(cursor?: string, limit: number = 12) {
-  const whereClause = cursor 
-    ? { 
+export async function getPropertiesPaginated(
+  cursor?: string,
+  limit: number = 12
+) {
+  const whereClause = cursor
+    ? {
         id: { lt: cursor },
-        status: 'PUBLISHED' as const
+        status: 'PUBLISHED' as const,
       }
     : { status: 'PUBLISHED' as const };
 
