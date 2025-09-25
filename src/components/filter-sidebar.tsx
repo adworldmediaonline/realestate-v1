@@ -183,16 +183,26 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
       value[0] !== undefined &&
       value[1] !== undefined
     ) {
-      updateFilters({ priceRange: value as [number, number] });
+      const [min, max] = value;
+      // Ensure min <= max and values are within bounds
+      const clampedMin = Math.max(min, filterOptions.priceRange[0]);
+      const clampedMax = Math.min(max, filterOptions.priceRange[1]);
+
+      if (clampedMin <= clampedMax) {
+        updateFilters({ priceRange: [clampedMin, clampedMax] });
+      }
     }
   };
 
   const handleLandAreaChange = (field: 'min' | 'max', value: string) => {
+    // Only allow numbers and empty string
+    const numericValue = value.replace(/[^0-9]/g, '');
+
     setFilters(prev => ({
       ...prev,
       landArea: {
         ...prev.landArea,
-        [field]: value,
+        [field]: numericValue,
       },
     }));
   };
@@ -241,8 +251,8 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   };
 
   return (
-    <div className="w-80 bg-white border-r border-estate-gray-200 h-full overflow-y-auto estate-scrollbar">
-      <div className="p-6">
+    <div className="w-full lg:w-80 bg-white border-r border-estate-gray-200 h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto estate-scrollbar p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-estate-gray-900">
@@ -355,7 +365,7 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
                   Math.floor(
                     (filterOptions.priceRange[1] -
                       filterOptions.priceRange[0]) /
-                      100
+                      50
                   )
                 )}
                 className="w-full"
@@ -412,10 +422,12 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
               </Label>
               <Input
                 id="land-area-min"
+                type="number"
                 placeholder="0"
                 value={filters.landArea.min}
                 onChange={e => handleLandAreaChange('min', e.target.value)}
                 className="mt-1"
+                min="0"
               />
             </div>
             <div>
@@ -427,10 +439,12 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
               </Label>
               <Input
                 id="land-area-max"
+                type="number"
                 placeholder="∞"
                 value={filters.landArea.max}
                 onChange={e => handleLandAreaChange('max', e.target.value)}
                 className="mt-1"
+                min="0"
               />
             </div>
           </div>
@@ -466,7 +480,7 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
                 />
                 <Label
                   htmlFor={`type-${type}`}
-                  className="text-sm text-estate-gray-600 cursor-pointer"
+                  className="text-sm text-estate-gray-600 cursor-pointer capitalize"
                 >
                   {type}
                 </Label>
@@ -568,27 +582,27 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Apply Filter Button */}
-        <div className="sticky bottom-0 bg-white pt-4 border-t border-estate-gray-200">
-          <Button
-            onClick={applyFilters}
-            disabled={!hasActiveFilters()}
-            className="w-full bg-estate-primary hover:bg-estate-primary-dark text-white"
-          >
-            Apply Filters
-          </Button>
-          {hasActiveFilters() && (
-            <div className="mt-2 text-center">
-              <span className="text-xs text-estate-gray-500">
-                {filters.locations.length +
-                  filters.propertyTypes.length +
-                  filters.amenities.length}{' '}
-                filters selected
-              </span>
-            </div>
-          )}
-        </div>
+      {/* Apply Filter Button - Fixed at bottom */}
+      <div className="bg-white border-t border-estate-gray-200 p-6">
+        <Button
+          onClick={applyFilters}
+          disabled={!hasActiveFilters()}
+          className="w-full bg-estate-primary hover:bg-estate-primary-dark text-white"
+        >
+          Apply Filters
+        </Button>
+        {hasActiveFilters() && (
+          <div className="mt-2 text-center">
+            <span className="text-xs text-estate-gray-500">
+              {filters.locations.length +
+                filters.propertyTypes.length +
+                filters.amenities.length}{' '}
+              filters selected
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

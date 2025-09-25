@@ -22,6 +22,10 @@ interface EstatePropertyGridProps {
   filters?: {
     locations?: string[];
     priceRange?: [number, number];
+    landArea?: {
+      min: string;
+      max: string;
+    };
     propertyTypes?: string[];
     amenities?: string[];
   };
@@ -93,6 +97,22 @@ export function EstatePropertyGrid({
       filtered = filtered.filter((property: PropertyWithImages) =>
         filters.propertyTypes!.includes(property.propertyType)
       );
+    }
+
+    // Land area filter
+    if (filters.landArea && (filters.landArea.min || filters.landArea.max)) {
+      filtered = filtered.filter((property: PropertyWithImages) => {
+        if (!property.area) return false;
+
+        const minArea = filters.landArea!.min
+          ? parseInt(filters.landArea!.min)
+          : 0;
+        const maxArea = filters.landArea!.max
+          ? parseInt(filters.landArea!.max)
+          : Infinity;
+
+        return property.area >= minArea && property.area <= maxArea;
+      });
     }
 
     // Amenities filter (using features field)
@@ -223,7 +243,14 @@ export function EstatePropertyGrid({
       <div className="flex-1 p-4 lg:p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="text-estate-gray-500 mb-2">
-            {searchQuery || Object.values(filters).some(f => f && f.length > 0)
+            {searchQuery ||
+            (filters.locations && filters.locations.length > 0) ||
+            (filters.propertyTypes && filters.propertyTypes.length > 0) ||
+            (filters.amenities && filters.amenities.length > 0) ||
+            (filters.landArea &&
+              (filters.landArea.min || filters.landArea.max)) ||
+            (filters.priceRange &&
+              (filters.priceRange[0] > 0 || filters.priceRange[1] < Infinity))
               ? 'No properties match your search criteria'
               : 'No properties available'}
           </div>
