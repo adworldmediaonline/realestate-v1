@@ -54,12 +54,14 @@ export default function Home() {
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
         {/* Filter Sidebar - Hidden on mobile, visible on desktop */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block lg:w-80 flex-shrink-0">
           <FilterSidebar onFiltersChange={handleFiltersChange} />
         </div>
 
         {/* Property Grid */}
-        <div className="flex-1 lg:flex-none lg:w-[calc(100%-24rem)]">
+        <div className={`flex-1 transition-all duration-300 ${
+          selectedProperty ? 'lg:w-[calc(100%-32rem)]' : 'lg:w-[calc(100%-20rem)]'
+        }`}>
           <EstatePropertyGrid
             selectedProperty={selectedProperty}
             onPropertySelect={handlePropertySelect}
@@ -69,12 +71,34 @@ export default function Home() {
         </div>
 
         {/* Property Detail Sidebar */}
-        {selectedProperty && (
-          <div className="hidden xl:block">
+        <div className={`hidden xl:block transition-all duration-300 ease-in-out ${
+          selectedProperty 
+            ? 'w-80 opacity-100 translate-x-0' 
+            : 'w-0 opacity-0 translate-x-full overflow-hidden'
+        }`}>
+          {selectedProperty && (
             <PropertyDetailSidebar
               property={selectedProperty}
               onClose={handleCloseDetailSidebar}
             />
+          )}
+        </div>
+
+        {/* Mobile Property Detail Overlay */}
+        {selectedProperty && (
+          <div 
+            className="xl:hidden fixed inset-0 z-50 bg-black bg-opacity-50 animate-in fade-in duration-300"
+            onClick={handleCloseDetailSidebar}
+          >
+            <div 
+              className="absolute right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-white shadow-xl animate-in slide-in-from-right duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <PropertyDetailSidebar
+                property={selectedProperty}
+                onClose={handleCloseDetailSidebar}
+              />
+            </div>
           </div>
         )}
       </div>
