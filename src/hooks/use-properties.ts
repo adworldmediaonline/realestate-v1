@@ -1,6 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from '@tanstack/react-query';
 import {
   getProperties,
+  getPropertiesPaginated,
   getPropertyById,
   createProperty,
   updateProperty,
@@ -15,11 +21,34 @@ import {
   PropertyWithImages,
 } from '@/validation/property.schema';
 
+// Define the return type for paginated properties - matches what getPropertiesPaginated returns
+export type PropertiesPage = {
+  data: any[]; // Using any[] to match the actual Prisma return type
+  nextCursor: string | undefined;
+  hasNextPage: boolean;
+};
+
 export function useProperties() {
   return useQuery({
     queryKey: ['properties'],
     queryFn: getProperties,
     select: data => data as PropertyWithImages[],
+  });
+}
+
+export function useInfiniteProperties() {
+  return useInfiniteQuery<PropertiesPage, Error>({
+    queryKey: ['properties', 'infinite'],
+    queryFn: async ({ pageParam }) => {
+      const result = await getPropertiesPaginated(
+        pageParam as string | undefined
+      );
+      return result;
+    },
+    getNextPageParam: lastPage => lastPage.nextCursor,
+    initialPageParam: undefined,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 

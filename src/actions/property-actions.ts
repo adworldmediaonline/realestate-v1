@@ -42,6 +42,7 @@ export async function createProperty(data: PropertyInput) {
 
 export async function getProperties() {
   const properties = await prisma.property.findMany({
+    where: { status: 'PUBLISHED' as const },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -56,6 +57,43 @@ export async function getProperties() {
       ? (JSON.parse(property.images as string) as unknown as ImageData[])
       : [],
   }));
+}
+
+export async function getPropertiesPaginated(cursor?: string, limit: number = 12) {
+  const whereClause = cursor 
+    ? { 
+        id: { lt: cursor },
+        status: 'PUBLISHED' as const
+      }
+    : { status: 'PUBLISHED' as const };
+
+  const properties = await prisma.property.findMany({
+    where: whereClause,
+    orderBy: { createdAt: 'desc' },
+    take: limit + 1, // Take one extra to check if there are more
+  });
+
+  const hasNextPage = properties.length > limit;
+  const data = hasNextPage ? properties.slice(0, limit) : properties;
+  const nextCursor = hasNextPage ? data[data.length - 1]?.id : undefined;
+
+  const formattedProperties = data.map(property => ({
+    ...property,
+    thumbnail: property.thumbnail
+      ? (JSON.parse(
+          property.thumbnail as string
+        ) as unknown as ImageData | null)
+      : Prisma.JsonNull,
+    images: property.images
+      ? (JSON.parse(property.images as string) as unknown as ImageData[])
+      : [],
+  }));
+
+  return {
+    data: formattedProperties,
+    nextCursor,
+    hasNextPage,
+  };
 }
 
 export async function getPropertyById(id: string) {

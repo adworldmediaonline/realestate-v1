@@ -63,7 +63,7 @@ export function PropertyDetailSidebar({
     {
       icon: IconSquare,
       label: 'Area',
-      value: `${property.area.toLocaleString()} sqft`,
+      value: property.area ? `${property.area.toLocaleString()} sqft` : 'N/A',
     },
     { icon: IconCar, label: 'Garage', value: '1' },
   ];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import {
   IconLoader2,
 } from '@tabler/icons-react';
 import { PropertyWithImages } from '@/validation/property.schema';
-import { useProperties } from '@/hooks/use-properties';
+import { useInfiniteProperties, PropertiesPage } from '@/hooks/use-properties';
 
 interface EstatePropertyGridProps {
   selectedProperty?: PropertyWithImages | null;
@@ -34,21 +34,35 @@ export function EstatePropertyGrid({
   filters = {},
 }: EstatePropertyGridProps) {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const { data: properties, isLoading, error } = useProperties();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+    isLoading,
+  } = useInfiniteProperties();
+
+  // Flatten all properties from all pages with proper typing
+  const allProperties = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page: any) => page.data as PropertyWithImages[]);
+  }, [data]);
 
   // Filter and search properties
   const filteredProperties = useMemo(() => {
-    if (!properties) return [];
+    if (!allProperties) return [];
 
-    let filtered = properties.filter(
-      property => property.status === 'PUBLISHED'
-    );
+    let filtered = allProperties;
 
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        property =>
+        (property: PropertyWithImages) =>
           property.name.toLowerCase().includes(query) ||
           property.description.toLowerCase().includes(query) ||
           property.location.toLowerCase().includes(query) ||
@@ -58,7 +72,7 @@ export function EstatePropertyGrid({
 
     // Location filter
     if (filters.locations && filters.locations.length > 0) {
-      filtered = filtered.filter(property =>
+      filtered = filtered.filter((property: PropertyWithImages) =>
         filters.locations!.some(location =>
           property.location.toLowerCase().includes(location.toLowerCase())
         )
@@ -69,22 +83,23 @@ export function EstatePropertyGrid({
     if (filters.priceRange) {
       const [minPrice, maxPrice] = filters.priceRange;
       filtered = filtered.filter(
-        property => property.price >= minPrice && property.price <= maxPrice
+        (property: PropertyWithImages) =>
+          property.price >= minPrice && property.price <= maxPrice
       );
     }
 
     // Property type filter
     if (filters.propertyTypes && filters.propertyTypes.length > 0) {
-      filtered = filtered.filter(property =>
+      filtered = filtered.filter((property: PropertyWithImages) =>
         filters.propertyTypes!.includes(property.propertyType)
       );
     }
 
     // Amenities filter (using features field)
     if (filters.amenities && filters.amenities.length > 0) {
-      filtered = filtered.filter(property =>
-        filters.amenities!.every(amenity =>
-          property.features.some(feature =>
+      filtered = filtered.filter((property: PropertyWithImages) =>
+        filters.amenities!.every((amenity: string) =>
+          property.features.some((feature: string) =>
             feature.toLowerCase().includes(amenity.toLowerCase())
           )
         )
@@ -92,7 +107,36 @@ export function EstatePropertyGrid({
     }
 
     return filtered;
-  }, [properties, searchQuery, filters]);
+  }, [allProperties, searchQuery, filters]);
+
+  // Infinite scroll with intersection observer
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [handleLoadMore]);
 
   const handleFavoriteToggle = (
     propertyId: string,
@@ -131,7 +175,7 @@ export function EstatePropertyGrid({
     }
   };
 
-  // Loading state
+  // Loading state with type narrowing
   if (isLoading) {
     return (
       <div className="flex-1 p-4 lg:p-6">
@@ -157,7 +201,7 @@ export function EstatePropertyGrid({
     );
   }
 
-  // Error state
+  // Error state with type narrowing
   if (error) {
     return (
       <div className="flex-1 p-4 lg:p-6 flex items-center justify-center">
@@ -194,7 +238,7 @@ export function EstatePropertyGrid({
   return (
     <div className="flex-1 p-4 lg:p-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-        {filteredProperties.map(property => {
+        {filteredProperties.map((property: PropertyWithImages) => {
           const isSelected = selectedProperty?.id === property.id;
           const isFavorite = favorites.has(property.id);
 
@@ -285,11 +329,40 @@ export function EstatePropertyGrid({
       </div>
 
       {/* Load More Button */}
-      <div className="flex justify-center mt-8">
-        <Button variant="outline" className="px-8 py-3">
-          Load More Properties
-        </Button>
-      </div>
+      {filteredProperties.length > 0 && (
+        <div className="flex justify-center mt-8">
+          <Button
+            variant="outline"
+            className="estate-button-secondary px-8 py-3"
+            onClick={() => fetchNextPage()}
+            disabled={!hasNextPage || isFetchingNextPage}
+          >
+            {isFetchingNextPage ? (
+              <>
+                <IconLoader2 className="h-4 w-4 mr-2 animate-spin" />
+                Loading more...
+              </>
+            ) : hasNextPage ? (
+              'Load More Properties'
+            ) : (
+              'No more properties to load'
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Background fetching indicator */}
+      {isFetching && !isFetchingNextPage && (
+        <div className="flex justify-center mt-4">
+          <div className="flex items-center text-estate-gray-500 text-sm">
+            <IconLoader2 className="h-4 w-4 mr-2 animate-spin" />
+            Updating properties...
+          </div>
+        </div>
+      )}
+
+      {/* Intersection observer trigger for infinite scroll */}
+      {hasNextPage && <div ref={loadMoreRef} className="h-4 w-full" />}
     </div>
   );
 }
