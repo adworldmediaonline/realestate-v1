@@ -31,14 +31,14 @@ interface FilterState {
 }
 
 const initialFilters: FilterState = {
-  locations: ['Jakarta, Indonesia'],
-  priceRange: [10000, 50000],
+  locations: [],
+  priceRange: [0, 100000],
   landArea: {
     min: '',
     max: '',
   },
-  propertyTypes: ['Single Family Home', 'Apartment'],
-  amenities: ['Garden'],
+  propertyTypes: [],
+  amenities: [],
 };
 
 // Scalable amenity options - can be easily extended
@@ -59,6 +59,8 @@ interface FilterSidebarProps {
 
 export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [appliedFilters, setAppliedFilters] =
+    useState<FilterState>(initialFilters);
   const { data: properties } = useProperties();
 
   // Dynamically generate filter options from real data
@@ -88,10 +90,10 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
 
     // Calculate price range
     const prices = publishedProperties.map(p => p.price);
-    const priceRange: [number, number] = [
-      Math.min(...prices),
-      Math.max(...prices),
-    ];
+    const priceRange: [number, number] =
+      prices.length > 0
+        ? [Math.min(...prices), Math.max(...prices)]
+        : [0, 100000];
 
     // Calculate area range
     const areas = publishedProperties
@@ -108,10 +110,43 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
     };
   }, [properties]);
 
+  // Initialize filters with real data when available
+  useMemo(() => {
+    if (
+      filterOptions.priceRange[0] !== 0 ||
+      filterOptions.priceRange[1] !== 100000
+    ) {
+      setFilters(prev => ({
+        ...prev,
+        priceRange: filterOptions.priceRange,
+      }));
+      setAppliedFilters(prev => ({
+        ...prev,
+        priceRange: filterOptions.priceRange,
+      }));
+    }
+  }, [filterOptions.priceRange]);
+
   const updateFilters = (newFilters: Partial<FilterState>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
-    onFiltersChange?.(updatedFilters);
+  };
+
+  const applyFilters = () => {
+    setAppliedFilters(filters);
+    onFiltersChange?.(filters);
+  };
+
+  const hasActiveFilters = () => {
+    return (
+      filters.locations.length > 0 ||
+      filters.propertyTypes.length > 0 ||
+      filters.amenities.length > 0 ||
+      filters.landArea.min !== '' ||
+      filters.landArea.max !== '' ||
+      filters.priceRange[0] !== filterOptions.priceRange[0] ||
+      filters.priceRange[1] !== filterOptions.priceRange[1]
+    );
   };
 
   const handleLocationToggle = (location: string) => {
@@ -136,7 +171,9 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   };
 
   const handlePriceRangeChange = (value: number[]) => {
-    updateFilters({ priceRange: value as [number, number] });
+    if (value.length === 2 && value[0] !== undefined && value[1] !== undefined) {
+      updateFilters({ priceRange: value as [number, number] });
+    }
   };
 
   const handleLandAreaChange = (field: 'min' | 'max', value: string) => {
@@ -150,13 +187,16 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   };
 
   const clearAllFilters = () => {
-    setFilters({
+    const clearedFilters = {
       locations: [],
-      priceRange: [0, 100000],
+      priceRange: filterOptions.priceRange,
       landArea: { min: '', max: '' },
       propertyTypes: [],
       amenities: [],
-    });
+    };
+    setFilters(clearedFilters);
+    setAppliedFilters(clearedFilters);
+    onFiltersChange?.(clearedFilters);
   };
 
   const removeLocationFilter = (location: string) => {
@@ -181,10 +221,12 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   };
 
   const formatPrice = (price: number) => {
-    if (price >= 1000) {
-      return `$${(price / 1000).toFixed(0)}K`;
+    if (price >= 100000) {
+      return `₹${(price / 100000).toFixed(1)}L`;
+    } else if (price >= 1000) {
+      return `₹${(price / 1000).toFixed(0)}K`;
     }
-    return `$${price}`;
+    return `₹${price.toLocaleString('en-IN')}`;
   };
 
   return (
@@ -280,7 +322,7 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
               variant="ghost"
               size="sm"
               onClick={() =>
-                setFilters(prev => ({ ...prev, priceRange: [0, 100000] }))
+                setFilters(prev => ({ ...prev, priceRange: filterOptions.priceRange }))
               }
               className="h-6 w-6 p-0"
             >
@@ -288,49 +330,30 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             </Button>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="price-custom" defaultChecked />
-              <Label
-                htmlFor="price-custom"
-                className="text-sm text-estate-gray-600"
-              >
-                Custom
-              </Label>
-            </div>
             <div className="px-2">
               <Slider
                 value={filters.priceRange}
                 onValueChange={handlePriceRangeChange}
                 max={filterOptions.priceRange[1]}
                 min={filterOptions.priceRange[0]}
-                step={Math.max(
-                  100,
-                  Math.floor(
-                    (filterOptions.priceRange[1] -
-                      filterOptions.priceRange[0]) /
-                      100
-                  )
-                )}
+                step={Math.max(1000, Math.floor((filterOptions.priceRange[1] - filterOptions.priceRange[0]) / 100))}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-estate-gray-500 mt-1">
-                <span>{formatPrice(filters.priceRange[0])}</span>
-                <span>{formatPrice(filters.priceRange[1])}</span>
+              <div className="flex justify-between text-xs text-estate-gray-500 mt-2">
+                <span className="font-medium text-estate-primary">
+                  {formatPrice(filters.priceRange[0])}
+                </span>
+                <span className="font-medium text-estate-primary">
+                  {formatPrice(filters.priceRange[1])}
+                </span>
               </div>
-            </div>
-            <div className="space-y-2">
-              {['Under $1,000', '$1,000 - $15,000', 'More Than $15,000'].map(
-                option => (
-                  <div key={option} className="flex items-center space-x-2">
-                    <Checkbox id={`price-${option}`} />
-                    <Label
-                      htmlFor={`price-${option}`}
-                      className="text-sm text-estate-gray-600"
-                    >
-                      {option}
-                    </Label>
-                  </div>
-                )
+              <div className="text-center text-xs text-estate-gray-400 mt-1">
+                Available: {formatPrice(filterOptions.priceRange[0])} - {formatPrice(filterOptions.priceRange[1])}
+              </div>
+              {filterOptions.priceRange[0] === filterOptions.priceRange[1] && (
+                <div className="text-center text-xs text-estate-warning mt-1">
+                  Only one price point available
+                </div>
               )}
             </div>
           </div>
@@ -520,6 +543,27 @@ export function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
                   </Badge>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Apply Filter Button */}
+        <div className="sticky bottom-0 bg-white pt-4 border-t border-estate-gray-200">
+          <Button
+            onClick={applyFilters}
+            disabled={!hasActiveFilters()}
+            className="w-full bg-estate-primary hover:bg-estate-primary-dark text-white"
+          >
+            Apply Filters
+          </Button>
+          {hasActiveFilters() && (
+            <div className="mt-2 text-center">
+              <span className="text-xs text-estate-gray-500">
+                {filters.locations.length +
+                  filters.propertyTypes.length +
+                  filters.amenities.length}{' '}
+                filters selected
+              </span>
             </div>
           )}
         </div>
