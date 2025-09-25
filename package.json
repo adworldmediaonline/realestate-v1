@@ -9,7 +9,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "db:generate": "prisma generate --no-engine",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate dev --name init",
     "db:studio": "prisma studio",
     "db:push": "prisma db push"
   },

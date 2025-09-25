@@ -14,7 +14,7 @@ type PropertyCardProps = {
 
 export function PropertyCard({ property }: PropertyCardProps) {
   return (
-    <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-0 bg-white rounded-2xl">
+    <Card className="group overflow-hidden pt-0 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-0 bg-white rounded-2xl">
       <CardHeader className="p-0">
         <div className="relative overflow-hidden">
           <Image
@@ -50,7 +50,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </p>
         <div className="flex justify-between items-center mb-4">
           <span className="text-2xl font-bold text-primary">
-            ${property.price.toLocaleString()}
+            ₹{property.price.toLocaleString('en-IN')}
           </span>
           <div className="flex gap-3 text-sm text-gray-600">
             <span className="flex items-center gap-1">
