@@ -55,13 +55,7 @@ type PropertyTableProps = {
   onEdit?: (property: PropertyWithImages) => void;
 };
 
-function PropertyActionsCell({
-  property,
-  onEdit,
-}: {
-  property: PropertyWithImages;
-  onEdit?: (property: PropertyWithImages) => void;
-}) {
+function PropertyActionsCell({ property }: { property: PropertyWithImages }) {
   const publishMutation = usePublishProperty();
   const unpublishMutation = useUnpublishProperty();
   const draftMutation = useMarkAsDraft();
@@ -113,9 +107,11 @@ function PropertyActionsCell({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onEdit?.(property)}>
-          <IconEdit className="mr-2 h-4 w-4" />
-          Edit
+        <DropdownMenuItem asChild>
+          <Link href={`/dashboard/properties/${property.id}/edit`}>
+            <IconEdit className="mr-2 h-4 w-4" />
+            Edit
+          </Link>
         </DropdownMenuItem>
         {property.status === 'DRAFT' && (
           <DropdownMenuItem onClick={handlePublish}>
@@ -192,7 +188,9 @@ export function PropertyTable({ onEdit }: PropertyTableProps) {
     {
       accessorKey: 'price',
       header: 'Price',
-      cell: ({ row }) => <div>${row.original.price.toLocaleString()}</div>,
+      cell: ({ row }) => (
+        <div>₹{row.original.price.toLocaleString('en-IN')}</div>
+      ),
     },
     {
       accessorKey: 'location',
@@ -239,9 +237,7 @@ export function PropertyTable({ onEdit }: PropertyTableProps) {
     },
     {
       id: 'actions',
-      cell: ({ row }) => (
-        <PropertyActionsCell property={row.original} onEdit={onEdit} />
-      ),
+      cell: ({ row }) => <PropertyActionsCell property={row.original} />,
     },
   ];
 

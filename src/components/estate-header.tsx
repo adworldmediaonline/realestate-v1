@@ -43,7 +43,7 @@ interface EstateHeaderProps {
 
 export function EstateHeader({ onSearchChange }: EstateHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session } = authClient.useSession();
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -164,10 +164,20 @@ export function EstateHeader({ onSearchChange }: EstateHeaderProps) {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/profile" className="flex items-center">
-                        <IconUser className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
+                      {session.user.role === 'admin' ? (
+                        <Link href="/dashboard" className="flex items-center">
+                          <IconUser className="mr-2 h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/dashboard/user"
+                          className="flex items-center"
+                        >
+                          <IconUser className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/favorites" className="flex items-center">
