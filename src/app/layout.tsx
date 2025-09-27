@@ -13,6 +13,13 @@ export const metadata: Metadata = {
   title: 'Real Estate - Find Your Dream Property',
   description:
     'Discover and explore premium properties with Real Estate. Find your perfect home, apartment, or villa with our advanced search and filtering system.',
+
+  robots: {
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
 };
 
 export default function RootLayout({
